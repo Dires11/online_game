@@ -1,7 +1,9 @@
+from xml.etree.ElementTree import XML
 import pygame
 from pygame.surfarray import pixels_alpha 
 import pytmx 
 from abc import ABC, abstractmethod
+from copy import deepcopy
 
 pygame.init()
 
@@ -30,19 +32,29 @@ class Map:
 vec = pygame.math.Vector2
 
 class Camera:
-    def __init__(self, player) -> None:
+    def __init__(self, player, width, height, orig_objects) -> None:
         self.player = player
         self.offset = vec(0, 0)
         self.offset_float = vec(0, 0)
-        self.DISPLAY_W, self.DISPLAY_HEIGHT = 1200, 800
-        self.CONST = vec(-self.DISPLAY_W/2 + player.radius, -self.player.y+player.radius + 20)
-
+        self.DISPLAY_W, self.DISPLAY_HEIGHT = width, height
+        self.CONST = vec(-self.DISPLAY_W/2, -self.player.rect.y+player.rect.height/2 + 20)
+        # self.CONST = vec(0, 0)
+        self.orig_objects = orig_objects
+        print(self.orig_objects)
     def setmethod(self, method):
         self.method = method
     
-    def scroll(self):
+    def scroll(self, objects):
         self.method.scroll()
+        # print([object.rect for object in self.orig_objects])
+        return self.move_objects(objects)
 
+    def move_objects(self, objects):
+        for i, object in enumerate(objects):  
+            object.rect.x = self.orig_objects[i][0] - self.offset.x
+            object.rect.y = self.orig_objects[i][1] - self.offset.y
+        
+        return objects
 
 class CamScroll(ABC):
     def __init__(self, camera, player):
@@ -61,7 +73,7 @@ class Follow(CamScroll):
     
 
     def scroll(self):
-       self.camera.offset_float.x += (self.player.x-self.player.radius - self.camera.offset_float.x + self.camera.CONST.x)
+       self.camera.offset_float.x += (self.player.rect.x+self.player.rect.width - self.camera.offset_float.x + self.camera.CONST.x)
     #    self.camera.offset_float.y += (self.player.y+self.player.radius - self.camera.offset_float.y)
        self.camera.offset_float.y += 0
        self.camera.offset.x, self.camera.offset.y = int(self.camera.offset_float.x), int(self.camera.offset_float.y)
@@ -72,7 +84,7 @@ class Border(CamScroll):
     
 
     def scroll(self):
-        self.camera.offset_float.x += (self.player.x-self.player.radius - self.camera.offset_float.x + self.camera.CONST.x)
+        self.camera.offset_float.x += (self.player.rect.x-self.player.rect.width/2 - self.camera.offset_float.x + self.camera.CONST.x)
         # self.camera.offset_float.y += (self.player.y+self.player.radius - self.camera.offset_float.y + self.camera.CONST.y)
         self.camera.offset_float.y += 0
         self.camera.offset.x, self.camera.offset.y = int(self.camera.offset_float.x), int(self.camera.offset_float.y)

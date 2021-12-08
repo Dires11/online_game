@@ -1,61 +1,72 @@
 import pygame 
 from map import *
+from sprites import *
 
-class Player():
-    def __init__(self, screen,  name, radius, color, x, y):
-        self.screen = screen
-        self.name = name
-        self.radius = radius
-        self.color = color
-        self.x = x
-        self.y = y
+class Game:
+    def __init__(self, w, h, fps) -> None:    
+        pygame.init()
+        self.WIDTH, self.HEIGHT = w, h
+        self.FPS = fps
+        self.screen = pygame.display.set_mode([self.WIDTH, self.HEIGHT])
+        self.clock = pygame.time.Clock()
+        self.load()
+
+    def load(self):
+        self.map = Map('test.tmx')
+        self.map_img = self.map.make_map()
+        self.map_rect = self.map_img.get_rect()
+        self.map_img = pygame.transform.scale2x(self.map_img)
+        self.walls = pygame.sprite.Group()
+        for tile_object in self.map.tmxdata.objects:
+            if tile_object.name == 'wall':
+                self.walls.add(Obstacle(tile_object.x*2, tile_object.y*2, tile_object.width*2, tile_object.height*2))
+        self.setup()
+
+
+    def setup(self):
+        coords = [[wall.rect.x, wall.rect.y] for wall in self.walls]
+        self.player = Player(self.screen, 100, 0, 25, 25, (0, 0, 255))  
+        self.camera = Camera(self.player, self.WIDTH, self.HEIGHT, coords)
+        self.players =  pygame.sprite.Group()
+        self.players.add(self.player)
+        self.follow = Follow(self.camera, self.player)
+        self.border = Border(self.camera, self.player)
+        self.camera.setmethod(self.follow)
+
         
 
+    def run(self):
+        self.running = True
+        self.space_pressed =False
+        while self.running:
+            dt = self.clock.tick(self.FPS) * 0.001 * self.FPS
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    exit()
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_SPACE:
+                        self.space_pressed = True
+                    if event.key == pygame.K_r:
+                        print(self.player.rect.x, self.player.rect.y)
 
-    def draw_player(self, coords):
-        return pygame.draw.circle(self.screen, self.color, (self.x-coords.x, self.y-coords.y), (self.radius))
+                        self.player.position.x = 100-self.camera.offset.y
+                        self.player.position.y = 0-self.camera.offset.y
+                if event.type == pygame.KEYUP:
+                    if event.key == pygame.K_SPACE:         
+                        self.space_pressed = False
 
-    def move(self, event):
-        keys=pygame.key.get_pressed()
-        
-        if keys[pygame.K_d]:
-            self.x += 6
-        if keys[pygame.K_a]:
-            self.x -= 6
-        if keys[pygame.K_w]:
-            self.y -= 10
-        if keys[pygame.K_s]:
-            self.y += 6
+            self.player.move(self.space_pressed, self.walls, dt)    
+            self.draw()
+            self.walls = self.camera.scroll(self.walls)
 
-pygame.init()
-screen = pygame.display.set_mode([1200, 800])
-clock = pygame.time.Clock()
-FPS = 60
-player_1 = Player(screen, 1, 8, (255, 0, 0), 100, 100)
-# Mapy kanchely stexic a 
-map = Map('bigger_map.tmx')
-map_img = map.make_map()
-map_rect = map_img.get_rect()
-map_img = pygame.transform.scale2x(map_img)
-# screen = pygame.transform.scale2x(screen)
-# Cameran el stexic
-camera = Camera(player_1)
-follow = Follow(camera, player_1)
-border = Border(camera, player_1)
-camera.setmethod(border)
+    def draw(self):
+        self.screen.fill((0, 0, 0))
+        # self.walls.draw(self.screen)
+        self.screen.blit(self.map_img, (0-self.camera.offset.x, 0-self.camera.offset.y))
+        self.players.draw(self.screen)  
+        pygame.display.update()
 
-while True:
-    clock.tick(FPS)
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            pygame.quit()
-            exit()
-
-    player_1.move(event)    
-    camera.scroll()
-    screen.fill((0, 0, 0))
-    # u stex nkareluc camera.offset.x u y piti hanes sax obyektneric
-    screen.blit(map_img, (0-camera.offset.x, 0-camera.offset.y))
-    player_1.draw_player(camera.offset)
-    pygame.display.update()
-
+if __name__ == '__main__':
+    game = Game(640, 320, 60)
+    game.run()

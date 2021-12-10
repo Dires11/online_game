@@ -37,14 +37,16 @@ class Camera:
         self.offset = vec(0, 0)
         self.offset_float = vec(0, 0)
         self.DISPLAY_W, self.DISPLAY_HEIGHT = width, height
-        self.CONST = vec(-self.DISPLAY_W/2, -self.player.rect.y+player.rect.height/2 + 20)
+        self.CONST = vec(-self.DISPLAY_W/2 + player.rect.width / 2, -self.player.rect.y+player.rect.height/2 + 20)
+        #  self.CONST = vec(-self.DISPLAY_W / 2 + player.rect.w / 2, -self.player.ground_y + 20)
         # self.CONST = vec(0, 0)
         self.orig_objects = orig_objects
-        print(self.orig_objects)
     def setmethod(self, method):
         self.method = method
     
     def scroll(self, objects):
+        print("CONST", self.CONST.x)
+        print("OFFSET", self.offset)
         self.method.scroll()
         # print([object.rect for object in self.orig_objects])
         return self.move_objects(objects)
@@ -73,10 +75,14 @@ class Follow(CamScroll):
     
 
     def scroll(self):
-       self.camera.offset_float.x += (self.player.rect.x+self.player.rect.width - self.camera.offset_float.x + self.camera.CONST.x)
+        print(self.player.rect.x)
+        self.camera.offset_float.x += (self.player.rect.x - self.camera.offset_float.x + self.camera.CONST.x)
+        # self.camera.offset_float.y += (self.player.rect.y - self.camera.offset_float.y + self.camera.CONST.y)
+
+        self.camera.offset.x, self.camera.offset.y = int(self.camera.offset_float.x), int(self.camera.offset_float.y)
+    #    self.camera.offset_float.x += (self.player.rect.x+self.player.rect.width - self.camera.offset_float.x + self.camera.CONST.x)
     #    self.camera.offset_float.y += (self.player.y+self.player.radius - self.camera.offset_float.y)
-       self.camera.offset_float.y += 0
-       self.camera.offset.x, self.camera.offset.y = int(self.camera.offset_float.x), int(self.camera.offset_float.y)
+    #    self.camera.offset.x, self.camera.offset.y = int(self.camera.offset_float.x), int(self.camera.offset_float.y)
 
 class Border(CamScroll):
     def __init__(self, camera, player):

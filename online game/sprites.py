@@ -1,12 +1,9 @@
 import pygame
-from pygame import key
-from pygame.constants import K_SPACE
-from pygame.draw import circle
 
 class Player(pygame.sprite.Sprite):
-    def __init__(self, screen, x, y, width, height, color):
+    def __init__(self, name, x=180, y=180, width=25, height=25, color=(0, 0, 255)):
+        self.name = name
         super().__init__()
-        self.screen = screen
         self.image = pygame.Surface([width, height])
         self.image.fill(color)
         self.rect = self.image.get_rect()
@@ -22,8 +19,8 @@ class Player(pygame.sprite.Sprite):
 
     def handle_collisions(self, walls):
         hits = pygame.sprite.spritecollide(self, walls, False)
+        self.position.x, self.position.y = self.rect.x, self.rect.y
         for hit in hits:
-   
             if hit.rect.collidepoint(self.rect.centerx, self.rect.y + self.rect.height):
                 self.on_ground = True
                 self.velocity.y = 0
@@ -45,10 +42,7 @@ class Player(pygame.sprite.Sprite):
                 self.position.x = self.rect.x
                 self.velocity.x = 0
                 
-          
-          
-
-    def horizontal_movement(self, keys, walls, dt):
+    def horizontal_movement(self, keys, dt):
         self.acceleration.x = 0
         if keys[pygame.K_d]:
             self.acceleration.x += 1
@@ -58,12 +52,12 @@ class Player(pygame.sprite.Sprite):
         self.acceleration.x += self.velocity.x * self.friction
         self.velocity.x += self.acceleration.x * dt
         self.velocity.x = max(-self.MAX_SPEED, min(self.velocity.x, self.MAX_SPEED))
-        self.velocity.x = 0 if 0 < self.velocity.x < 0.1 else self.velocity.x   
+        self.velocity.x = 0 if 0 < abs(self.velocity.x) < 0.1 else self.velocity.x   
         self.position.x += self.velocity.x * dt + (self.acceleration.x * .5) * (dt ** 2)
         self.rect.x = self.position.x
 
 
-    def vertical_movement(self, space_pressed, walls, dt):
+    def vertical_movement(self, space_pressed, dt):
         if space_pressed and self.on_ground:
             self.velocity.y -= self.JUMP_SPEED
             self.on_ground = False
@@ -76,12 +70,30 @@ class Player(pygame.sprite.Sprite):
         
     def move(self, space_pressed, walls, dt):
         keys=pygame.key.get_pressed()
-        self.horizontal_movement(keys, walls, dt)
-        self.vertical_movement(space_pressed, walls, dt)
+        self.horizontal_movement(keys, dt)
+        self.vertical_movement(space_pressed, dt)
         #Checks if obstacle is on player's way if yes player doesn't move
         self.handle_collisions(walls)
         
 
+class MainPlayer(Player):
+    pass
+
+
+
+class CustomGroup(pygame.sprite.Group):
+    def __init__(self) -> None:
+        super().__init__()
+
+    def draw(self, surface, main_spr, cam_off):
+        sprites = self.sprites()
+        surface_blit = surface.blit
+        for i, spr in enumerate(sprites):
+            if spr == main_spr:
+                self.spritedict[spr] = surface_blit(spr.image, spr.rect)
+            else:
+                self.spritedict[spr] = surface_blit(spr.image, (spr.rect.x-cam_off.x, spr.rect.y-cam_off.y))
+        
 class Obstacle(pygame.sprite.Sprite):
     def __init__(self, x, y, w, h) -> None:
         super().__init__()

@@ -3,12 +3,13 @@ from map import *
 from sprites import *
 
 class Game:
-    def __init__(self, w, h, fps) -> None:    
+    def __init__(self, w, h, fps, name) -> None:    
         pygame.init()
         self.WIDTH, self.HEIGHT = w, h
         self.FPS = fps
         self.screen = pygame.display.set_mode([self.WIDTH, self.HEIGHT])
         self.clock = pygame.time.Clock()
+        self.name = name
         self.load()
 
     def load(self):
@@ -25,7 +26,7 @@ class Game:
 
     def setup(self):
         coords = [[wall.rect.x, wall.rect.y] for wall in self.walls]
-        self.player = Player(self.screen, 100, 0, 25, 25, (0, 0, 255))  
+        self.player = Player(self.name)  
         self.camera = Camera(self.player, self.WIDTH, self.HEIGHT, coords)
         self.players =  pygame.sprite.Group()
         self.players.add(self.player)
@@ -49,14 +50,19 @@ class Game:
                         self.space_pressed = True
                     if event.key == pygame.K_r:
                         print(self.player.rect.x, self.player.rect.y)
-
                         self.player.position.x = 100-self.camera.offset.y
                         self.player.position.y = 0-self.camera.offset.y
                 if event.type == pygame.KEYUP:
                     if event.key == pygame.K_SPACE:         
                         self.space_pressed = False
 
+            prev_pos =  [self.player.rect.x, self.player.rect.y]
             self.player.move(self.space_pressed, self.walls, dt)    
+            if not (prev_pos[0] == self.player.rect.x and prev_pos[1] == self.player.rect.y):
+                pass
+            
+               
+
             self.draw()
             self.walls = self.camera.scroll(self.walls)
 
@@ -68,5 +74,6 @@ class Game:
         pygame.display.update()
 
 if __name__ == '__main__':
-    game = Game(640, 320, 60)
+   
+    game = Game(640, 320, 60, '1')
     game.run()

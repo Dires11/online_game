@@ -45,7 +45,7 @@ class Camera:
     
     def scroll(self, objects):
         self.method.scroll()
-        return self.move_objects(objects)
+        # return self.move_objects(objects)
 
     def move_objects(self, objects):
         for i, object in enumerate(objects):  
@@ -68,34 +68,41 @@ class CamScroll(ABC):
 class Follow(CamScroll):
     def __init__(self, camera, player):
         super().__init__(camera, player)
-    
 
     def scroll(self):
-        self.camera.offset_float.x += (self.player.rect.x - self.camera.offset_float.x + self.camera.CONST.x)
-        # self.camera.offset_float.y += (self.player.rect.y - self.camera.offset_float.y + self.camera.CONST.y)
-
-        self.camera.offset.x, self.camera.offset.y = int(self.camera.offset_float.x), int(self.camera.offset_float.y)
-    #    self.camera.offset_float.x += (self.player.rect.x+self.player.rect.width - self.camera.offset_float.x + self.camera.CONST.x)
-    #    self.camera.offset_float.y += (self.player.y+self.player.radius - self.camera.offset_float.y)
-    #    self.camera.offset.x, self.camera.offset.y = int(self.camera.offset_float.x), int(self.camera.offset_float.y)
-
-class Border(CamScroll):
-    def __init__(self, camera, player):
-        super().__init__(camera, player)
+        self.camera.offset.x +=(self.player.rect.x+self.player.rect.width/2-self.camera.offset.x-self.camera.DISPLAY_W/2)/20
+        self.camera.offset.x = min(self.camera.DISPLAY_W/2, max(0, self.camera.offset.x))
+# class Follow(CamScroll):
+#     def __init__(self, camera, player):
+#         super().__init__(camera, player)
     
 
-    def scroll(self):
-        self.camera.offset_float.x += (self.player.rect.x-self.player.rect.width/2 - self.camera.offset_float.x + self.camera.CONST.x)
-        # self.camera.offset_float.y += (self.player.y+self.player.radius - self.camera.offset_float.y + self.camera.CONST.y)
-        self.camera.offset_float.y += 0
-        self.camera.offset.x, self.camera.offset.y = int(self.camera.offset_float.x), int(self.camera.offset_float.y)
-        self.camera.offset.x = max(0, self.camera.offset.x)
-        self.camera.offset.x = min(self.camera.DISPLAY_W, self.camera.offset.x)
+#     def scroll(self):
+#         self.camera.offset_float.x += (self.player.rect.x - self.camera.offset_float.x + self.camera.CONST.x)
+#         # self.camera.offset_float.y += (self.player.rect.y - self.camera.offset_float.y + self.camera.CONST.y)
 
-class Auto(CamScroll):
-    def __init__(self, camera, player):
-        super().__init__(camera, player)
+#         self.camera.offset.x, self.camera.offset.y = int(self.camera.offset_float.x), int(self.camera.offset_float.y)
+#     #    self.camera.offset_float.x += (self.player.rect.x+self.player.rect.width - self.camera.offset_float.x + self.camera.CONST.x)
+#     #    self.camera.offset_float.y += (self.player.y+self.player.radius - self.camera.offset_float.y)
+#     #    self.camera.offset.x, self.camera.offset.y = int(self.camera.offset_float.x), int(self.camera.offset_float.y)
+
+# class Border(CamScroll):
+#     def __init__(self, camera, player):
+#         super().__init__(camera, player)
     
 
-    def scroll(self):
-      self.camera.offset.x += 1
+#     def scroll(self):
+#         self.camera.offset_float.x += (self.player.rect.x-self.player.rect.width/2 - self.camera.offset_float.x + self.camera.CONST.x)
+#         # self.camera.offset_float.y += (self.player.y+self.player.radius - self.camera.offset_float.y + self.camera.CONST.y)
+#         self.camera.offset_float.y += 0
+#         self.camera.offset.x, self.camera.offset.y = int(self.camera.offset_float.x), int(self.camera.offset_float.y)
+#         self.camera.offset.x = max(0, self.camera.offset.x)
+#         self.camera.offset.x = min(self.camera.DISPLAY_W, self.camera.offset.x)
+
+# class Auto(CamScroll):
+#     def __init__(self, camera, player):
+#         super().__init__(camera, player)
+    
+
+#     def scroll(self):
+#       self.camera.offset.x += 1

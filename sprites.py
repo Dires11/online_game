@@ -1,7 +1,7 @@
 import pygame
 
 class Player(pygame.sprite.Sprite):
-    def __init__(self, name, x=180, y=180, width=25, height=25, color=(0, 0, 255)):
+    def __init__(self, name, x=0, y=200, width=25, height=25, color=(0, 0, 255)):
         self.name = name
         super().__init__()
         self.image = pygame.Surface([width, height])
@@ -14,7 +14,7 @@ class Player(pygame.sprite.Sprite):
         self.acceleration = pygame.math.Vector2(0, self.gravity)
         self.MAX_FALLING_SPEED = 7
         self.MAX_SPEED = 4
-        self.JUMP_SPEED = 16
+        self.JUMP_SPEED = 7
         self.on_ground = False
 
     def handle_collisions(self, walls):
@@ -56,7 +56,6 @@ class Player(pygame.sprite.Sprite):
         self.position.x += self.velocity.x * dt + (self.acceleration.x * .5) * (dt ** 2)
         self.rect.x = self.position.x
 
-
     def vertical_movement(self, space_pressed, dt):
         if space_pressed and self.on_ground:
             self.velocity.y -= self.JUMP_SPEED
@@ -88,11 +87,8 @@ class CustomGroup(pygame.sprite.Group):
     def draw(self, surface, main_spr, cam_off):
         sprites = self.sprites()
         surface_blit = surface.blit
-        for i, spr in enumerate(sprites):
-            if spr == main_spr:
-                self.spritedict[spr] = surface_blit(spr.image, spr.rect)
-            else:
-                self.spritedict[spr] = surface_blit(spr.image, (spr.rect.x-cam_off.x, spr.rect.y-cam_off.y))
+        for spr in sprites:
+            self.spritedict[spr] = surface_blit(spr.image, (spr.rect.x-cam_off.x, spr.rect.y-cam_off.y))
         
 class Obstacle(pygame.sprite.Sprite):
     def __init__(self, x, y, w, h) -> None:

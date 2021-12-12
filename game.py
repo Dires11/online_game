@@ -24,7 +24,7 @@ class Game:
         self.main_player = main_player
         self.players.add(main_player)
         pygame.display.set_caption(main_player.name)
-        self.map = Map('xuymap.tmx')
+        self.map = Map('test.tmx')
         self.map_img = pygame.transform.scale2x(self.map.make_map())
         self.map_rect = self.map_img.get_rect()
         self.walls = pygame.sprite.Group()
@@ -35,7 +35,6 @@ class Game:
         self.camera = Camera(self.main_player, self.WIDTH, self.HEIGHT, coords)
         self.players.add(self.main_player)
         self.follow = Follow(self.camera, self.main_player)
-        self.border = Border(self.camera, self.main_player)
         self.camera.setmethod(self.follow)
 
         
@@ -58,26 +57,26 @@ class Game:
                     if event.key == pygame.K_SPACE:
                         self.space_pressed = True
                     if event.key == pygame.K_r:
-                        self.main_player.rect.x = 200
+                        self.main_player.rect.x = 0
                         self.main_player.rect.y = 0
-                        self.main_player.position.x = 200
+                        self.main_player.position.x = 0
                         self.main_player.position.y = 0
-                        with lk:
-                            if IN_GAME:
-                                client_socket.send(f'newpos:{self.main_player.rect.x}:{self.main_player.rect.y};'.encode())
+                        # with lk:
+                        #     if IN_GAME:
+                        #         client_socket.send(f'newpos:{self.main_player.rect.x}:{self.main_player.rect.y};'.encode())
                 if event.type == pygame.KEYUP:
                     if event.key == pygame.K_SPACE:         
                         self.space_pressed = False
 
             prev_pos =  [self.main_player.rect.x, self.main_player.rect.y]
             self.main_player.move(self.space_pressed, self.walls, dt)    
-            with lk:
-                if IN_GAME and not (prev_pos[0] == self.main_player.rect.x and prev_pos[1] == self.main_player.rect.y):
-                    print('SENDING POSITIONS')
-                    client_socket.send(f'newpos:{self.main_player.rect.x}:{self.main_player.rect.y};'.encode())
+            # with lk:
+            #     if IN_GAME and not (prev_pos[0] == self.main_player.rect.x and prev_pos[1] == self.main_player.rect.y):
+            #         print('SENDING POSITIONS')
+            #         client_socket.send(f'newpos:{self.main_player.rect.x}:{self.main_player.rect.y};'.encode())
 
+            self.camera.scroll(self.walls)
             self.draw()
-            self.walls = self.camera.scroll(self.walls)
 
     def draw(self):
         
@@ -166,12 +165,12 @@ def client(mp, client_socket):
             switch()
 
 if __name__ == '__main__':
-    mp_name, client_socket = register()
-    mp = MainPlayer(mp_name)
+    # mp_name, client_socket = register()
+    # mp = MainPlayer(mp_name)
 
-    clientThread = threading.Thread(target=client, args=(mp, client_socket))
-    clientThread.start()
-    
-    game = Game(640, 960, 60, mp)
+    # clientThread = threading.Thread(target=client, args=(mp, client_socket))
+    # clientThread.start()
+    mp = MainPlayer('david')
+    game = Game(640, 320, 60, mp)
     game.run()
 

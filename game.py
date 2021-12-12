@@ -13,16 +13,18 @@ IN_GAME = False
 
 
 class Game:
+    players = CustomGroup()
+
     def __init__(self, w, h, fps, main_player) -> None:    
 
         self.WIDTH, self.HEIGHT = w, h
         self.FPS = fps
         self.screen = pygame.display.set_mode([self.WIDTH, self.HEIGHT])
-        self.players =  CustomGroup()
+        print(self.screen)
         self.main_player = main_player
         self.players.add(main_player)
         pygame.display.set_caption(main_player.name)
-        self.map = Map('test.tmx')
+        self.map = Map('xuymap.tmx')
         self.map_img = pygame.transform.scale2x(self.map.make_map())
         self.map_rect = self.map_img.get_rect()
         self.walls = pygame.sprite.Group()
@@ -60,19 +62,19 @@ class Game:
                         self.main_player.rect.y = 0
                         self.main_player.position.x = 200
                         self.main_player.position.y = 0
-                        # with lk:
-                        #     if IN_GAME:
-                        #         client_socket.send(f'newpos:{self.main_player.rect.x}:{self.main_player.rect.y};'.encode())
+                        with lk:
+                            if IN_GAME:
+                                client_socket.send(f'newpos:{self.main_player.rect.x}:{self.main_player.rect.y};'.encode())
                 if event.type == pygame.KEYUP:
                     if event.key == pygame.K_SPACE:         
                         self.space_pressed = False
 
             prev_pos =  [self.main_player.rect.x, self.main_player.rect.y]
             self.main_player.move(self.space_pressed, self.walls, dt)    
-            # with lk:
-            #     if IN_GAME and not (prev_pos[0] == self.main_player.rect.x and prev_pos[1] == self.main_player.rect.y):
-            #         print('SENDING POSITIONS')
-            #         client_socket.send(f'newpos:{self.main_player.rect.x}:{self.main_player.rect.y};'.encode())
+            with lk:
+                if IN_GAME and not (prev_pos[0] == self.main_player.rect.x and prev_pos[1] == self.main_player.rect.y):
+                    print('SENDING POSITIONS')
+                    client_socket.send(f'newpos:{self.main_player.rect.x}:{self.main_player.rect.y};'.encode())
 
             self.draw()
             self.walls = self.camera.scroll(self.walls)
@@ -123,14 +125,14 @@ def client(mp, client_socket):
                 if 'newpl' in command:
                     newplayernick = command.split(':')[1]
                     print("Newplayer", newplayernick)
-                    game.players.add(Player(newplayernick))
-                    print(game.players)
+                    Game.players.add(Player(newplayernick))
+                    print(Game.players)
                 elif 'newpos' in command:
                     assert len(command.split(':')) == 4, (command, False)
                     _, newplayernick, x, y = command.split(':')
                     print('new pos for ', newplayernick, ':', x, y)
                     
-                    for teammate in game.players:
+                    for teammate in Game.players:
                         if teammate.name == newplayernick:
                             teammate.rect.x, teammate.rect.y = int(x), int(y)
 
@@ -149,12 +151,12 @@ def client(mp, client_socket):
             if answer != b'1':
                 threadOn = True
                 players = answer.decode().split(';')
-                print("Nick:", game.main_player.name, "Players:", game.players)
-                game.players = CustomGroup()
-                game.players.add(mp)
+                print("Nick:", game.main_player.name, "Players:", Game.players)
+                Game.players = CustomGroup()
+                Game.players.add(mp)
                 for player in players:
-                    game.players.add(Player(player))
-            print(game.players)
+                    Game.players.add(Player(player))
+            print(Game.players)
         
         if threadOn:
             switch()
@@ -164,13 +166,12 @@ def client(mp, client_socket):
             switch()
 
 if __name__ == '__main__':
-    # mp_name, client_socket = register()
-    # mp = MainPlayer(mp_name)
+    mp_name, client_socket = register()
+    mp = MainPlayer(mp_name)
 
-    # clientThread = threading.Thread(target=client, args=(mp, client_socket))
-    # clientThread.start()
+    clientThread = threading.Thread(target=client, args=(mp, client_socket))
+    clientThread.start()
     
-    mp = MainPlayer("dav")
-    game = Game(640, 320, 60, mp)
+    game = Game(640, 960, 60, mp)
     game.run()
 

@@ -1,14 +1,25 @@
 import pygame
 
+
+class MyImg(pygame.Surface):
+
+    def __init__(self, *args, **kwargs):
+        self.color = kwargs.pop('color')
+        pygame.Surface.__init__(self, *args, **kwargs)
+        self.fill(self.color)
+
+    def get_rect(self, x, y):
+        obj = pygame.Surface.get_rect(self)
+        obj.x, obj.y = x, y
+        return obj
+
+
 class Player(pygame.sprite.Sprite):
     def __init__(self, name, x=0, y=200, width=25, height=25, color=(0, 0, 255)):
         self.name = name
         super().__init__()
-        self.image = pygame.Surface([width, height])
-        self.image.fill(color)
-        self.rect = self.image.get_rect()
-        self.rect.x = x    
-        self.rect.y = y
+        self.image = MyImg([width, height], color=color)
+        self.rect = self.image.get_rect(x=x, y=y)
         self.gravity, self.friction = .35, -.12
         self.position, self.velocity = pygame.math.Vector2(x, y), pygame.math.Vector2(0, 0)
         self.acceleration = pygame.math.Vector2(0, self.gravity)
@@ -25,23 +36,23 @@ class Player(pygame.sprite.Sprite):
                 self.on_ground = True
                 self.velocity.y = 0
                 self.rect.y = hit.y - self.rect.height
-                self.position.y = self.rect.y 
+                self.position.y = self.rect.y
 
             if hit.rect.collidepoint(self.rect.centerx, self.rect.y):
                 self.rect.y = hit.y + hit.height
                 self.position.y = self.rect.y
                 self.velocity.y = 0
-            
-            if hit.rect.collidepoint(self.rect.x, self.rect.centery): 
+
+            if hit.rect.collidepoint(self.rect.x, self.rect.centery):
                 self.rect.x = hit.rect.x + hit.rect.width
                 self.position.x = self.rect.x
                 self.velocity.x = 0
-                
-            if hit.rect.collidepoint(self.rect.x + self.rect.width, self.rect.centery): 
+
+            if hit.rect.collidepoint(self.rect.x + self.rect.width, self.rect.centery):
                 self.rect.x = hit.rect.x - self.rect.width
                 self.position.x = self.rect.x
                 self.velocity.x = 0
-                
+
     def horizontal_movement(self, keys, dt):
         self.acceleration.x = 0
         if keys[pygame.K_d]:
@@ -52,7 +63,7 @@ class Player(pygame.sprite.Sprite):
         self.acceleration.x += self.velocity.x * self.friction
         self.velocity.x += self.acceleration.x * dt
         self.velocity.x = max(-self.MAX_SPEED, min(self.velocity.x, self.MAX_SPEED))
-        self.velocity.x = 0 if 0 < abs(self.velocity.x) < 0.1 else self.velocity.x   
+        self.velocity.x = 0 if 0 < abs(self.velocity.x) < 0.1 else self.velocity.x
         self.position.x += self.velocity.x * dt + (self.acceleration.x * .5) * (dt ** 2)
         self.rect.x = self.position.x
 
@@ -62,34 +73,32 @@ class Player(pygame.sprite.Sprite):
             self.on_ground = False
 
         self.velocity.y = min(self.MAX_FALLING_SPEED, (self.velocity.y + self.acceleration.y * dt))
-        self.velocity.y = 0 if 0 < self.velocity.y < 0.1 else self.velocity.y   
+        self.velocity.y = 0 if 0 < self.velocity.y < 0.1 else self.velocity.y
         self.position.y += self.velocity.y * dt + (self.acceleration.y * .5) * (dt * dt)
-        self.acceleration.y = self.gravity    
+        self.acceleration.y = self.gravity
         self.rect.y = self.position.y
-        
+
     def move(self, space_pressed, walls, dt):
-        keys=pygame.key.get_pressed()
+        keys = pygame.key.get_pressed()
         self.horizontal_movement(keys, dt)
         self.vertical_movement(space_pressed, dt)
-        #Checks if obstacle is on player's way if yes player doesn't move
+        # Checks if obstacle is on player's way if yes player doesn't move
         self.handle_collisions(walls)
-        
+
 
 class MainPlayer(Player):
     pass
 
 
-
 class CustomGroup(pygame.sprite.Group):
-    def __init__(self) -> None:
-        super().__init__()
 
-    def draw(self, surface, main_spr, cam_off):
+    def draw(self, surface, cam_off):
         sprites = self.sprites()
         surface_blit = surface.blit
         for spr in sprites:
-            self.spritedict[spr] = surface_blit(spr.image, (spr.rect.x-cam_off.x, spr.rect.y-cam_off.y))
-        
+            self.spritedict[spr] = surface_blit(spr.image, (spr.rect.x - cam_off.x, spr.rect.y - cam_off.y))
+
+
 class Obstacle(pygame.sprite.Sprite):
     def __init__(self, x, y, w, h) -> None:
         super().__init__()
@@ -100,5 +109,3 @@ class Obstacle(pygame.sprite.Sprite):
         self.rect = pygame.Rect(x, y, w, h)
         self.image = pygame.Surface([w, h])
         self.image.fill((255, 0, 0))
-
-

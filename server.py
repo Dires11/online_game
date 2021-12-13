@@ -39,7 +39,7 @@ class Room:
 
 def server():
     server_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    server_sock.bind(('', 2075))
+    server_sock.bind(('', 2077))
     server_sock.listen()
     while True:
         yield 'read', server_sock
@@ -77,7 +77,6 @@ def client(sock, player):
                         sock.send(
                             ';'.join(pl.nick for pl in player.room.players if not (pl is player)).encode()
                         )
-                        print('New Connection:', player.nick, ';'.join(pl.nick for pl in player.room.players if not (pl is player)).encode() )
                         player.newPlayer()
                     else:
                         yield 'write', sock
@@ -112,7 +111,6 @@ def event_loop():
                 reason, sock = next(task)
             except ConnectionError as e:
                 raise e
-                continue
 
             if reason == 'read':
                 to_read[sock] = task
